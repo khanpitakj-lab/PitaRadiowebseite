@@ -1,0 +1,51 @@
+﻿body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(180deg, #cceeff, #e6f7ff);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.radio {
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    width: 320px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+h1 {
+    margin-top: 0;
+    color: #0077aa;
+}
+
+select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.player button {
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 8px;
+    border: none;
+    background-color: #0099dd;
+    color: white;
+    cursor: pointer;
+}
+
+    .player button:hover {
+        background-color: #0077aa;
+    }
+
+.nowplaying {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #333;
+}

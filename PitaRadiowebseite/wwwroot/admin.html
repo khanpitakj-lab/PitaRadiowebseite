@@ -1,0 +1,120 @@
+﻿<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pita Radio – Admin Upload</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+        .admin {
+            max-width: 520px;
+            margin: 18px auto;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 10px;
+            text-align: left;
+        }
+
+            .field input, .field select {
+                padding: 10px 12px;
+                border-radius: 12px;
+                border: 1px solid #cfe7ff;
+            }
+
+        .hint {
+            font-size: 12px;
+            color: #466476;
+            margin-top: 8px;
+        }
+
+        .ok {
+            color: #0a7a2f;
+            font-weight: 700;
+        }
+
+        .err {
+            color: #b00020;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="radio admin">
+        <h1>📤 Pita Radio Upload</h1>
+
+        <div class="field">
+            <label>Genre</label>
+            <input id="genre" placeholder="z.B. Pop" value="Pop" />
+        </div>
+
+        <div class="field">
+            <label>Titel (optional)</label>
+            <input id="title" placeholder="Songtitel" />
+        </div>
+
+        <div class="field">
+            <label>Artist (optional)</label>
+            <input id="artist" placeholder="Künstler" />
+        </div>
+
+        <div class="field">
+            <label>Datei</label>
+            <input id="file" type="file" accept=".mp3,.wav,.m4a,.ogg,audio/*" />
+        </div>
+
+        <div class="player">
+            <button id="uploadBtn">⬆ Upload</button>
+            <a class="hint" href="/" style="display:inline-block;margin-left:10px;">← zurück zum Radio</a>
+        </div>
+
+        <div id="msg" class="hint"></div>
+    </div>
+
+    <script>
+    const msg = document.getElementById("msg");
+    const uploadBtn = document.getElementById("uploadBtn");
+
+    uploadBtn.addEventListener("click", async () => {
+      msg.textContent = "";
+
+      const genre = document.getElementById("genre").value.trim() || "Unsorted";
+      const title = document.getElementById("title").value.trim();
+      const artist = document.getElementById("artist").value.trim();
+      const fileInput = document.getElementById("file");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        msg.innerHTML = '<span class="err">Bitte eine Datei auswählen.</span>';
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("genre", genre);
+      fd.append("title", title);
+      fd.append("artist", artist);
+
+      msg.textContent = "Upload läuft...";
+
+      try {
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const text = await res.text();
+
+        if (!res.ok) {
+          msg.innerHTML = '<span class="err">Upload fehlgeschlagen:</span> ' + text;
+          return;
+        }
+
+        msg.innerHTML = '<span class="ok">Upload OK!</span> ' + text;
+        fileInput.value = "";
+      } catch (e) {
+        msg.innerHTML = '<span class="err">Fehler:</span> ' + e;
+      }
+    });
+    </script>
+</body>
+</html>

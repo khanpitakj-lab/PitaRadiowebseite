@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <title>Pita Radio</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+    <div class="radio">
+        <h1>📻 Pita Radio</h1>
+
+        <select id="genreSelect">
+            <option value="">Genre wählen…</option>
+        </select>
+
+        <div class="player">
+            <button id="playBtn">▶ Play</button>
+            <button id="pauseBtn">⏸ Pause</button>
+        </div>
+
+        <div class="nowplaying" id="nowPlaying">
+            Kein Song geladen
+        </div>
+
+        <audio id="audio" controls></audio>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
