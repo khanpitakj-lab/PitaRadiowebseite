@@ -3,42 +3,51 @@ using Microsoft.EntityFrameworkCore;
 using PitaRadiowebseite.Data;
 using PitaRadiowebseite.Models;
 
-// SQLite native init (Linux/Railway)
-SQLitePCL.Batteries_V2.Init();
-
-var builder = WebApplication.CreateBuilder(args);
-
-// Railway: IMMER PORT aus ENV (nicht hart!)
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
-
-// Upload limit
-builder.Services.Configure<FormOptions>(o =>
+try
 {
-    o.MultipartBodyLengthLimit = 200 * 1024 * 1024;
-});
+    var builder = WebApplication.CreateBuilder(args);
 
-// Services
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+    // Railway Port
+    var portStr = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+    builder.WebHost.UseUrls($"http://0.0.0.0:{portStr}");
 
-// SQLite mit Fallback
-var cs = builder.Configuration.GetConnectionString("Default")
-         ?? "Data Source=/app/mini_radio.db";
+    // Upload limit
+    builder.Services.Configure<FormOptions>(o =>
+    {
+        o.MultipartBodyLengthLimit = 200 * 1024 * 1024;
+    });
 
-builder.Services.AddDbContext<AppDbContext>(o =>
-    o.UseSqlite(cs)
-);
+    // Services
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
 
-var app = builder.Build();
+    // DB (mit Fallback)
+    var cs = builder.Configuration.GetConnectionString("Default") ?? "Data Source=mini_radio.db";
+    builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(cs));
 
-// Middleware
-app.UseDefaultFiles();
-app.UseStaticFiles();
+    var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
 
-// 👉 HIER deine API Endpoints (MapGet / MapPost)
+    app.UseSwagger();
+    app.UseSwaggerUI();
 
-app.Run();
+    // >>> DEINE MapGet/MapPost ROUTES HIER <<<
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Console.WriteLine("FATAL STARTUP ERROR");
+    Console.WriteLine($"Type: {ex.GetType().FullName}");
+    Console.WriteLine($"Message: {ex.Message}");
+
+    if (ex.InnerException != null)
+    {
+        Console.WriteLine($"Inner Type: {ex.InnerException.GetType().FullName}");
+        Console.WriteLine($"Inner Message: {ex.InnerException.Message}");
+    }
+
+    throw;
+}
