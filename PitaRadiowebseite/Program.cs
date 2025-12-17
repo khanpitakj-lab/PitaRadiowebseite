@@ -3,53 +3,42 @@ using Microsoft.EntityFrameworkCore;
 using PitaRadiowebseite.Data;
 using PitaRadiowebseite.Models;
 
+// SQLite native init (Linux/Railway)
+SQLitePCL.Batteries_V2.Init();
+
 var builder = WebApplication.CreateBuilder(args);
 
-// =========================
-// RAILWAY: fest auf 0.0.0.0:8080 hören
-// (passt zum Railway Networking Target Port 8080)
-// =========================
-builder.WebHost.UseUrls("http://0.0.0.0:8080");
+// Railway: IMMER PORT aus ENV (nicht hart!)
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
-// =========================
-// UPLOAD LIMIT (Form)
-// =========================
+// Upload limit
 builder.Services.Configure<FormOptions>(o =>
 {
-    o.MultipartBodyLengthLimit = 200 * 1024 * 1024; // 200 MB
+    o.MultipartBodyLengthLimit = 200 * 1024 * 1024;
 });
 
-// =========================
-// SERVICES
-// =========================
+// Services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// =========================
-// DB (SQLite) - Fallback, falls ConnectionString fehlt
-// =========================
+// SQLite mit Fallback
 var cs = builder.Configuration.GetConnectionString("Default")
-         ?? "Data Source=mini_radio.db";
+         ?? "Data Source=/app/mini_radio.db";
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(cs)
+builder.Services.AddDbContext<AppDbContext>(o =>
+    o.UseSqlite(cs)
 );
 
 var app = builder.Build();
 
-// =========================
-// MIDDLEWARE
-// =========================
+// Middleware
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// Swagger
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// =========================
-// API ROUTES
-// =========================
-// >>> HIER deine MapGet/MapPost Endpoints wieder einfügen <<<
+// 👉 HIER deine API Endpoints (MapGet / MapPost)
 
 app.Run();
