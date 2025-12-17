@@ -6,22 +6,23 @@ using PitaRadiowebseite.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // =========================
-// RAILWAY: Auf PORT hören (wichtig!)
+// RAILWAY: auf 0.0.0.0:PORT hören
 // =========================
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+var portStr = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+if (!int.TryParse(portStr, out var port)) port = 8080;
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(port); // <- ganz wichtig für Railway
+    options.Limits.MaxRequestBodySize = 200 * 1024 * 1024; // 200 MB
+});
 
 // =========================
-// UPLOAD LIMIT (z.B. 200 MB)
+// UPLOAD LIMIT (Form)
 // =========================
 builder.Services.Configure<FormOptions>(o =>
 {
     o.MultipartBodyLengthLimit = 200 * 1024 * 1024; // 200 MB
-});
-
-builder.WebHost.ConfigureKestrel(o =>
-{
-    o.Limits.MaxRequestBodySize = 200 * 1024 * 1024; // 200 MB
 });
 
 // =========================
@@ -30,14 +31,8 @@ builder.WebHost.ConfigureKestrel(o =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// SQLite Pfad: lokal (Projektordner) / Railway (falls DATA_DIR gesetzt, sonst /tmp)
-var dataDir = Environment.GetEnvironmentVariable("DATA_DIR");
-var dbPath = !string.IsNullOrWhiteSpace(dataDir)
-    ? Path.Combine(dataDir, "mini_radio.db")
-    : Path.Combine(Path.GetTempPath(), "mini_radio.db");
-
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite($"Data Source={dbPath}")
+    options.UseSqlite(builder.Configuration.GetConnectionString("Default"))
 );
 
 var app = builder.Build();
@@ -48,17 +43,12 @@ var app = builder.Build();
 app.UseDefaultFiles();   // index.html automatisch
 app.UseStaticFiles();    // wwwroot ausliefern
 
-// Swagger: wenn du willst, auch in Production aktiv lassen (hilft beim Testen)
+// Swagger (optional: auch in Production anzeigen)
 app.UseSwagger();
 app.UseSwaggerUI();
 
 // =========================
-// HEALTH CHECK (zum Testen)
-// =========================
-app.MapGet("/healthz", () => Results.Ok("OK"));
-
-// =========================
-// API ENDPOINTS
+// API
 // =========================
 app.MapGet("/api/genres", async (AppDbContext db) =>
 {
@@ -82,7 +72,6 @@ app.MapGet("/api/tracks", async (string? genre, AppDbContext db) =>
     return Results.Ok(tracks);
 });
 
-// Upload (multipart/form-data: file + title + artist + genre)
 app.MapPost("/api/upload", async (HttpRequest request, AppDbContext db, IWebHostEnvironment env) =>
 {
     if (!request.HasFormContentType)
@@ -101,8 +90,7 @@ app.MapPost("/api/upload", async (HttpRequest request, AppDbContext db, IWebHost
 
     static string Safe(string input) =>
         string.Concat((input ?? "").Where(c =>
-            char.IsLetterOrDigit(c) || c == '-' || c == '_' || c == ' '))
-        .Trim();
+            char.IsLetterOrDigit(c) || c == '-' || c == '_' || c == ' ')).Trim();
 
     var safeGenre = Safe(genre);
     if (string.IsNullOrWhiteSpace(safeGenre)) safeGenre = "Unsorted";
@@ -115,7 +103,6 @@ app.MapPost("/api/upload", async (HttpRequest request, AppDbContext db, IWebHost
 
     var fileName = $"{DateTime.UtcNow:yyyyMMddHHmmss}_{baseName}{ext}";
 
-    // Ziel: wwwroot/audio/<Genre>/
     var audioDir = Path.Combine(env.WebRootPath ?? "wwwroot", "audio", safeGenre);
     Directory.CreateDirectory(audioDir);
 
