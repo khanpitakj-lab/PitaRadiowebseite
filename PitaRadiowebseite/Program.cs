@@ -6,6 +6,12 @@ using PitaRadiowebseite.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // =========================
+// RAILWAY: auf PORT hören (wichtig!)
+// =========================
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}"); // Railway verlangt 0.0.0.0:$PORT :contentReference[oaicite:2]{index=2}
+
+// =========================
 // UPLOAD LIMIT (z.B. 200 MB)
 // =========================
 builder.Services.Configure<FormOptions>(o =>
@@ -33,9 +39,10 @@ var app = builder.Build();
 // =========================
 // MIDDLEWARE
 // =========================
-app.UseDefaultFiles();   // index.html automatisch laden
-app.UseStaticFiles();    // wwwroot ausliefern (HTML, CSS, JS, MP3)
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
+// Swagger nur in Dev (auf Railway ist meist Production)
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -45,8 +52,6 @@ if (app.Environment.IsDevelopment())
 // =========================
 // API ENDPOINTS
 // =========================
-
-// Genres abrufen
 app.MapGet("/api/genres", async (AppDbContext db) =>
 {
     var genres = await db.Tracks
@@ -58,7 +63,6 @@ app.MapGet("/api/genres", async (AppDbContext db) =>
     return Results.Ok(genres);
 });
 
-// Alle Tracks oder nach Genre (?genre=Pop)
 app.MapGet("/api/tracks", async (string? genre, AppDbContext db) =>
 {
     var query = db.Tracks.AsQueryable();
@@ -66,18 +70,11 @@ app.MapGet("/api/tracks", async (string? genre, AppDbContext db) =>
     if (!string.IsNullOrWhiteSpace(genre))
         query = query.Where(t => t.Genre == genre);
 
-    var tracks = await query
-        .OrderBy(t => t.Id)
-        .ToListAsync();
-
+    var tracks = await query.OrderBy(t => t.Id).ToListAsync();
     return Results.Ok(tracks);
 });
 
-// Upload (multipart/form-data: file + title + artist + genre)
-app.MapPost("/api/upload", async (
-    HttpRequest request,
-    AppDbContext db,
-    IWebHostEnvironment env) =>
+app.MapPost("/api/upload", async (HttpRequest request, AppDbContext db, IWebHostEnvironment env) =>
 {
     if (!request.HasFormContentType)
         return Results.BadRequest("FormData erwartet.");
@@ -91,31 +88,25 @@ app.MapPost("/api/upload", async (
     var title = form["title"].ToString().Trim();
     var artist = form["artist"].ToString().Trim();
     var genre = form["genre"].ToString().Trim();
+    if (string.IsNullOrWhiteSpace(genre)) genre = "Unsorted";
 
-    if (string.IsNullOrWhiteSpace(genre))
-        genre = "Unsorted";
-
-    // sichere Namen (Ordner/Dateiname)
     static string Safe(string input) =>
         string.Concat((input ?? "").Where(c =>
             char.IsLetterOrDigit(c) || c == '-' || c == '_' || c == ' '))
         .Trim();
 
     var safeGenre = Safe(genre);
-    if (string.IsNullOrWhiteSpace(safeGenre))
-        safeGenre = "Unsorted";
+    if (string.IsNullOrWhiteSpace(safeGenre)) safeGenre = "Unsorted";
 
     var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-    if (ext != ".mp3" && ext != ".wav" && ext != ".m4a" && ext != ".ogg")
-        return Results.BadRequest("Nur mp3 / wav / m4a / ogg erlaubt.");
+    if (ext != ".mp3") // ✅ nur mp3 (wie du wolltest)
+        return Results.BadRequest("Nur mp3 erlaubt.");
 
     var baseName = Safe(Path.GetFileNameWithoutExtension(file.FileName));
-    if (string.IsNullOrWhiteSpace(baseName))
-        baseName = "track";
+    if (string.IsNullOrWhiteSpace(baseName)) baseName = "track";
 
     var fileName = $"{DateTime.UtcNow:yyyyMMddHHmmss}_{baseName}{ext}";
 
-    // Ziel: wwwroot/audio/<Genre>/
     var audioDir = Path.Combine(env.WebRootPath ?? "wwwroot", "audio", safeGenre);
     Directory.CreateDirectory(audioDir);
 
@@ -140,7 +131,4 @@ app.MapPost("/api/upload", async (
     return Results.Ok(track);
 });
 
-// =========================
-// START
-// =========================
 app.Run();
