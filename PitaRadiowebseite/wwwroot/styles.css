@@ -12,7 +12,7 @@
     background: white;
     padding: 25px;
     border-radius: 16px;
-    width: 320px;
+    width: 360px;
     text-align: center;
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
 }
@@ -22,30 +22,155 @@ h1 {
     color: #0077aa;
 }
 
-select {
+/* ===== Start Button ===== */
+.startBtn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    background: #00a3e0;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    margin: 10px 0 8px;
+}
+
+    .startBtn:hover {
+        background: #0077aa;
+    }
+
+/* ===== Track Card ===== */
+.trackCard {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border-radius: 14px;
+    background: #f6fbff;
+    margin: 10px 0 14px;
+    text-align: left;
+}
+
+.cover {
+    width: 84px;
+    height: 84px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: #dfeff8;
+    flex: 0 0 auto;
+}
+
+.meta {
+    flex: 1;
+    min-width: 0;
+}
+
+.songTitle {
+    font-weight: 700;
+    font-size: 16px;
+    color: #004d6e;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.songArtist {
+    margin-top: 2px;
+    font-size: 13px;
+    color: #2b2b2b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===== Controls ===== */
+.controlsRow {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.iconBtn {
+    border: none;
+    background: #0099dd;
+    color: white;
+    border-radius: 10px;
+    padding: 8px 10px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .iconBtn:hover {
+        background: #0077aa;
+    }
+
+.volumeBox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    border: 1px solid #cfe6f3;
+    border-radius: 10px;
+    padding: 6px 10px;
+}
+
+    .volumeBox input {
+        width: 110px;
+    }
+
+.eqBox {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    background: white;
+    border: 1px solid #cfe6f3;
+    border-radius: 10px;
+    padding: 6px 10px;
+}
+
+    .eqBox label {
+        font-size: 11px;
+        color: #444;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .eqBox input {
+        width: 70px;
+    }
+
+/* ===== Genre Dropdown ===== */
+.genreSelect {
     width: 100%;
     padding: 10px;
-    margin-bottom: 15px;
     border-radius: 8px;
     border: 1px solid #ccc;
 }
 
-.player button {
-    padding: 10px 20px;
-    margin: 5px;
-    border-radius: 8px;
-    border: none;
-    background-color: #0099dd;
+/* ===== Charts Button ===== */
+.chartsLinkBox {
+    margin-top: 14px;
+    text-align: center;
+}
+
+.chartsBtn {
+    display: inline-block;
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    background: #7a3df0;
     color: white;
-    cursor: pointer;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s ease;
 }
 
-    .player button:hover {
-        background-color: #0077aa;
+    .chartsBtn:hover {
+        background: #5d2ec7;
     }
-
-.nowplaying {
-    margin-top: 15px;
-    font-size: 14px;
-    color: #333;
-}

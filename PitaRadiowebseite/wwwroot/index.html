@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pita Radio</title>
     <link rel="stylesheet" href="styles.css" />
 </head>
@@ -10,20 +11,41 @@
     <div class="radio">
         <h1>📻 Pita Radio</h1>
 
-        <select id="genreSelect">
+        <button id="startBtn" class="startBtn">▶ Start</button>
+
+        <div class="trackCard">
+            <img id="coverImg" class="cover" src="" alt="Cover" />
+            <div class="meta">
+                <div id="songTitle" class="songTitle">Kein Song geladen</div>
+                <div id="songArtist" class="songArtist">–</div>
+
+                <div class="controlsRow">
+                    <button id="clapBtn" class="iconBtn" title="Klatschen">👏</button>
+
+                    <div class="volumeBox" title="Lautstärke">
+                        🔊 <input id="volumeSlider" type="range" min="0" max="1" step="0.01" value="0.9">
+                    </div>
+
+                    <div class="eqBox" title="Mini Equalizer (3-Band)">
+                        <label>Bass <input id="eqLow" type="range" min="-12" max="12" step="1" value="0"></label>
+                        <label>Mid <input id="eqMid" type="range" min="-12" max="12" step="1" value="0"></label>
+                        <label>High <input id="eqHigh" type="range" min="-12" max="12" step="1" value="0"></label>
+                    </div>
+
+                    <a id="artistLink" class="iconBtn" href="#" target="_blank" rel="noopener" title="Künstler-Seite">🔎</a>
+                </div>
+            </div>
+        </div>
+
+        <select id="genreSelect" class="genreSelect">
             <option value="">Genre wählen…</option>
         </select>
 
-        <div class="player">
-            <button id="playBtn">▶ Play</button>
-            <button id="pauseBtn">⏸ Pause</button>
+        <div class="chartsLinkBox">
+            <a href="/charts.html" class="chartsBtn">📊 Charts</a>
         </div>
 
-        <div class="nowplaying" id="nowPlaying">
-            Kein Song geladen
-        </div>
-
-        <audio id="audio" controls></audio>
+        <audio id="audio" preload="auto"></audio>
     </div>
 
     <script src="app.js"></script>
