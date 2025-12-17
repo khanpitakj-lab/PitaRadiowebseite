@@ -5,23 +5,41 @@ using PitaRadiowebseite.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Upload limit
+// =========================
+// RAILWAY: auf 0.0.0.0:PORT hören
+// =========================
+var portStr = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{portStr}");
+
+// =========================
+// UPLOAD LIMIT (Form)
+// =========================
 builder.Services.Configure<FormOptions>(o =>
 {
-    o.MultipartBodyLengthLimit = 200 * 1024 * 1024;
+    o.MultipartBodyLengthLimit = 200 * 1024 * 1024; // 200 MB
 });
 
-// Services
+// =========================
+// SERVICES
+// =========================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// =========================
+// DB (SQLite) - Fallback, falls ConnectionString fehlt
+// =========================
+var cs = builder.Configuration.GetConnectionString("Default")
+         ?? "Data Source=mini_radio.db";
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("Default"))
+    options.UseSqlite(cs)
 );
 
 var app = builder.Build();
 
-// Static files
+// =========================
+// MIDDLEWARE
+// =========================
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
@@ -29,7 +47,9 @@ app.UseStaticFiles();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// API routes ...
-// (deine MapGet/MapPost bleiben genau wie sie sind)
+// =========================
+// API ROUTES
+// =========================
+// >>> HIER deine MapGet/MapPost Endpoints wieder einfügen <<<
 
 app.Run();
