@@ -6,10 +6,10 @@ using PitaRadiowebseite.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // =========================
-// RAILWAY: auf PORT hören (wichtig!)
+// RAILWAY: Auf PORT hören (wichtig!)
 // =========================
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}"); // Railway verlangt 0.0.0.0:$PORT :contentReference[oaicite:2]{index=2}
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 // =========================
 // UPLOAD LIMIT (z.B. 200 MB)
@@ -30,8 +30,14 @@ builder.WebHost.ConfigureKestrel(o =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// SQLite Pfad: lokal (Projektordner) / Railway (falls DATA_DIR gesetzt, sonst /tmp)
+var dataDir = Environment.GetEnvironmentVariable("DATA_DIR");
+var dbPath = !string.IsNullOrWhiteSpace(dataDir)
+    ? Path.Combine(dataDir, "mini_radio.db")
+    : Path.Combine(Path.GetTempPath(), "mini_radio.db");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("Default"))
+    options.UseSqlite($"Data Source={dbPath}")
 );
 
 var app = builder.Build();
@@ -39,15 +45,17 @@ var app = builder.Build();
 // =========================
 // MIDDLEWARE
 // =========================
-app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseDefaultFiles();   // index.html automatisch
+app.UseStaticFiles();    // wwwroot ausliefern
 
-// Swagger nur in Dev (auf Railway ist meist Production)
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Swagger: wenn du willst, auch in Production aktiv lassen (hilft beim Testen)
+app.UseSwagger();
+app.UseSwaggerUI();
+
+// =========================
+// HEALTH CHECK (zum Testen)
+// =========================
+app.MapGet("/healthz", () => Results.Ok("OK"));
 
 // =========================
 // API ENDPOINTS
@@ -74,6 +82,7 @@ app.MapGet("/api/tracks", async (string? genre, AppDbContext db) =>
     return Results.Ok(tracks);
 });
 
+// Upload (multipart/form-data: file + title + artist + genre)
 app.MapPost("/api/upload", async (HttpRequest request, AppDbContext db, IWebHostEnvironment env) =>
 {
     if (!request.HasFormContentType)
@@ -99,14 +108,14 @@ app.MapPost("/api/upload", async (HttpRequest request, AppDbContext db, IWebHost
     if (string.IsNullOrWhiteSpace(safeGenre)) safeGenre = "Unsorted";
 
     var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-    if (ext != ".mp3") // ✅ nur mp3 (wie du wolltest)
-        return Results.BadRequest("Nur mp3 erlaubt.");
+    if (ext != ".mp3") return Results.BadRequest("Nur mp3 erlaubt.");
 
     var baseName = Safe(Path.GetFileNameWithoutExtension(file.FileName));
     if (string.IsNullOrWhiteSpace(baseName)) baseName = "track";
 
     var fileName = $"{DateTime.UtcNow:yyyyMMddHHmmss}_{baseName}{ext}";
 
+    // Ziel: wwwroot/audio/<Genre>/
     var audioDir = Path.Combine(env.WebRootPath ?? "wwwroot", "audio", safeGenre);
     Directory.CreateDirectory(audioDir);
 
