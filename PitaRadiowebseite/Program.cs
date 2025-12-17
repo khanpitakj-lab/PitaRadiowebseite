@@ -6,10 +6,10 @@ using PitaRadiowebseite.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // =========================
-// RAILWAY: auf 0.0.0.0:PORT hören
+// RAILWAY: fest auf 0.0.0.0:8080 hören
+// (passt zum Railway Networking Target Port 8080)
 // =========================
-var portStr = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-builder.WebHost.UseUrls($"http://0.0.0.0:{portStr}");
+builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
 // =========================
 // UPLOAD LIMIT (Form)
